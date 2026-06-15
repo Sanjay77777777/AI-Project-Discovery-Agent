@@ -151,3 +151,26 @@ class RepositoryIndexer:
             name=self.repo_name,
             metadata={"repo_name": self.repo_name},
         )
+
+    def store_documents(self, collection, chunks: List[Dict]):
+        documents = []
+        metadatas = []
+        ids = []
+
+        for chunk in chunks:
+            documents.append(chunk["content"])
+            metadatas.append({
+                "file_path": chunk["file_path"],
+                "category": chunk["category"],
+                "chunk_number": str(chunk["chunk_number"]),
+            })
+            ids.append(chunk["chunk_id"])
+
+        embeddings = self.generate_embeddings(documents)
+
+        collection.add(
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            ids=ids,
+        )
