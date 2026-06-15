@@ -3,6 +3,7 @@ import os
 import uuid
 from typing import Generator, List, Dict, Optional
 
+import ollama
 import chromadb
 from chromadb.config import Settings
 
@@ -13,6 +14,7 @@ from app.config import (
     SUPPORTED_EXTENSIONS,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
+    EMBEDDING_MODEL,
 )
 
 
@@ -119,6 +121,21 @@ class DocumentProcessor:
 class RepositoryIndexer:
     def __init__(self, repo_name: str):
         self.repo_name = repo_name
+
+    @staticmethod
+    def generate_embeddings(texts: List[str]) -> List[List[float]]:
+        if not texts:
+            return []
+        texts = [t for t in texts if t is not None]
+        if not texts:
+            return []
+        try:
+            response = ollama.embed(model=EMBEDDING_MODEL, input=texts)
+            return response["embeddings"]
+        except Exception as e:
+            raise RuntimeError(
+                f"Ollama embedding failed for model '{EMBEDDING_MODEL}': {e}"
+            ) from e
 
     @staticmethod
     def get_chromadb_client():
