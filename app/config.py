@@ -43,3 +43,7 @@ CHROMADB_PATH = VECTORDB_DIR / "chroma"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 LLM_MODEL = "qwen2.5-coder:7b"
+
+MAX_CONTEXT_CHUNKS = 5
+
+LLM_TIMEOUT = 60

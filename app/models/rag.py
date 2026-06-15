@@ -43,6 +43,12 @@ class CollectionInfo(BaseModel):
     metadata: dict = {}
 
 
+class SourceSummary(BaseModel):
+    file_path: str
+    category: str
+    relevance_score: float
+
+
 class QARequest(BaseModel):
     repo_name: str
     query: str
@@ -54,6 +60,19 @@ class QAResponse(BaseModel):
     query: str
     answer: str
     sources: List[RetrievalResult]
+    source_summary: List[SourceSummary]
+
+
+class RepositorySummaryRequest(BaseModel):
+    repo_name: str
+
+
+class RepositorySummaryResponse(BaseModel):
+    repo_name: str
+    summary: str
+    architecture: str
+    technologies: List[str]
+    sources: List[str]
 
 
 class CollectionsListResponse(BaseModel):

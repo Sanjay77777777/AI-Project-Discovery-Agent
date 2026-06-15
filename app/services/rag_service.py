@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import os
 import uuid
@@ -16,6 +17,8 @@ from app.config import (
     CHUNK_OVERLAP,
     EMBEDDING_MODEL,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentProcessor:
@@ -123,6 +126,10 @@ class RepositoryIndexer:
         self.repo_name = repo_name
 
     @staticmethod
+    def repository_exists(repo_name: str) -> bool:
+        return (REPOSITORIES_DIR / repo_name).exists()
+
+    @staticmethod
     def generate_embeddings(texts: List[str]) -> List[List[float]]:
         if not texts:
             return []
@@ -189,6 +196,7 @@ class RepositoryIndexer:
                 f"Repository '{self.repo_name}' not found at {repo_path}"
             )
 
+        logger.info("Indexing repository '%s' started", self.repo_name)
         processor = DocumentProcessor(self.repo_name)
         chunks = processor.process_repository()
 
@@ -199,10 +207,11 @@ class RepositoryIndexer:
         total_batches = (len(chunks) + batch_size - 1) // batch_size
         for i in range(0, len(chunks), batch_size):
             batch_num = i // batch_size + 1
-            print(f"Indexing batch {batch_num}/{total_batches}")
+            logger.info("Indexing batch %s/%s for '%s'", batch_num, total_batches, self.repo_name)
             batch = chunks[i:i + batch_size]
             self.store_documents(collection, batch)
 
+        logger.info("Indexing repository '%s' completed: %s chunks", self.repo_name, len(chunks))
         return {
             "status": "indexed",
             "repo_name": self.repo_name,
@@ -225,6 +234,7 @@ class RAGRetriever:
     def retrieve(
         repo_name: str, query: str, top_k: int = 5
     ) -> List[Dict[str, Any]]:
+        logger.info("Retrieval request for '%s': query='%s', top_k=%s", repo_name, query, top_k)
         client = RepositoryIndexer.get_chromadb_client()
         collection = client.get_collection(repo_name)
 
@@ -238,6 +248,7 @@ class RAGRetriever:
 
         retrieved = []
         if not results["ids"] or not results["ids"][0]:
+            logger.info("Retrieval for '%s' returned 0 chunks", repo_name)
             return retrieved
 
         for i in range(len(results["ids"][0])):
@@ -257,4 +268,5 @@ class RAGRetriever:
             })
 
         retrieved.sort(key=lambda x: x["relevance_score"], reverse=True)
+        logger.info("Retrieval for '%s' returned %s chunks", repo_name, len(retrieved))
         return retrieved
