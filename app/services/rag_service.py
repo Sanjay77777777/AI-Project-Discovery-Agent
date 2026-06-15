@@ -174,3 +174,38 @@ class RepositoryIndexer:
             metadatas=metadatas,
             ids=ids,
         )
+
+    def delete_collection(self):
+        try:
+            client = self.get_chromadb_client()
+            client.delete_collection(self.repo_name)
+        except Exception:
+            pass
+
+    def index_repository(self) -> Dict:
+        repo_path = REPOSITORIES_DIR / self.repo_name
+        if not repo_path.exists():
+            raise FileNotFoundError(
+                f"Repository '{self.repo_name}' not found at {repo_path}"
+            )
+
+        processor = DocumentProcessor(self.repo_name)
+        chunks = processor.process_repository()
+
+        self.delete_collection()
+        collection = self.get_or_create_collection()
+
+        batch_size = 100
+        total_batches = (len(chunks) + batch_size - 1) // batch_size
+        for i in range(0, len(chunks), batch_size):
+            batch_num = i // batch_size + 1
+            print(f"Indexing batch {batch_num}/{total_batches}")
+            batch = chunks[i:i + batch_size]
+            self.store_documents(collection, batch)
+
+        return {
+            "status": "indexed",
+            "repo_name": self.repo_name,
+            "documents": len(chunks),
+            "collection": self.repo_name,
+        }
