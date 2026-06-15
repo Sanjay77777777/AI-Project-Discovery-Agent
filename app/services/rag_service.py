@@ -3,8 +3,12 @@ import os
 import uuid
 from typing import Generator, List, Dict, Optional
 
+import chromadb
+from chromadb.config import Settings
+
 from app.config import (
     REPOSITORIES_DIR,
+    CHROMADB_PATH,
     IGNORE_PATTERNS,
     SUPPORTED_EXTENSIONS,
     CHUNK_SIZE,
@@ -110,3 +114,23 @@ class DocumentProcessor:
             chunks.extend(self.chunk_document(content, str(path)))
 
         return chunks
+
+
+class RepositoryIndexer:
+    def __init__(self, repo_name: str):
+        self.repo_name = repo_name
+
+    @staticmethod
+    def get_chromadb_client():
+        CHROMADB_PATH.mkdir(parents=True, exist_ok=True)
+        return chromadb.PersistentClient(
+            path=str(CHROMADB_PATH),
+            settings=Settings(anonymized_telemetry=False),
+        )
+
+    def get_or_create_collection(self):
+        client = self.get_chromadb_client()
+        return client.get_or_create_collection(
+            name=self.repo_name,
+            metadata={"repo_name": self.repo_name},
+        )
