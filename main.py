@@ -11,6 +11,7 @@ from app.api.summary import router as summary_router
 from app.api.setup_guide import (
     router as setup_guide_router
 )
+from app.api.rag import rag_router
 app = FastAPI()
 
 app.include_router(home_router)
@@ -23,3 +24,4 @@ app.include_router(repository_router)
 app.include_router(analysis_router)
 app.include_router(summary_router)
 app.include_router(setup_guide_router)
+app.include_router(rag_router)
