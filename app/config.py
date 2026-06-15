@@ -41,3 +41,5 @@ CHUNK_OVERLAP = 200
 CHROMADB_PATH = VECTORDB_DIR / "chroma"
 
 EMBEDDING_MODEL = "nomic-embed-text"
+
+LLM_MODEL = "qwen2.5-coder:7b"

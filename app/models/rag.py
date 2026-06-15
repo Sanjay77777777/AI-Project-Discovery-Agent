@@ -43,6 +43,19 @@ class CollectionInfo(BaseModel):
     metadata: dict = {}
 
 
+class QARequest(BaseModel):
+    repo_name: str
+    query: str
+    top_k: int = Field(default=5, ge=1, le=20)
+
+
+class QAResponse(BaseModel):
+    repo_name: str
+    query: str
+    answer: str
+    sources: List[RetrievalResult]
+
+
 class CollectionsListResponse(BaseModel):
     collections: List[CollectionInfo]
     total: int

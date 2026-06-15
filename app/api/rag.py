@@ -7,8 +7,11 @@ from app.models.rag import (
     RetrievalResult,
     CollectionsListResponse,
     CollectionInfo,
+    QARequest,
+    QAResponse,
 )
 from app.services.rag_service import RepositoryIndexer, RAGRetriever
+from app.services.repository_qa import RepositoryQA
 
 rag_router = APIRouter(prefix="/rag", tags=["RAG - Repository Search"])
 
@@ -94,6 +97,43 @@ async def list_collections():
     return CollectionsListResponse(
         collections=collection_info,
         total=len(collection_info),
+    )
+
+
+@rag_router.post("/qa", response_model=QAResponse)
+async def repository_qa(request: QARequest):
+    if not RAGRetriever.collection_exists(request.repo_name):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repository '{request.repo_name}' not indexed.",
+        )
+
+    try:
+        qa = RepositoryQA()
+        result = qa.generate_answer(request.repo_name, request.query, request.top_k)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"QA generation failed: {e}",
+        )
+
+    sources = [
+        RetrievalResult(
+            content=r["content"],
+            file_path=r["file_path"],
+            category=r["category"],
+            chunk_id=r["chunk_id"],
+            chunk_number=r["chunk_number"],
+            relevance_score=r["relevance_score"],
+        )
+        for r in result["sources"]
+    ]
+
+    return QAResponse(
+        repo_name=request.repo_name,
+        query=request.query,
+        answer=result["answer"],
+        sources=sources,
     )
 
 
