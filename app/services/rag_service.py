@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import uuid
-from typing import Generator, List, Dict, Optional
+from typing import Generator, List, Dict, Optional, Any
 
 import ollama
 import chromadb
@@ -149,7 +149,7 @@ class RepositoryIndexer:
         client = self.get_chromadb_client()
         return client.get_or_create_collection(
             name=self.repo_name,
-            metadata={"repo_name": self.repo_name},
+            metadata={"repo_name": self.repo_name, "hnsw:space": "cosine"},
         )
 
     def store_documents(self, collection, chunks: List[Dict]):
@@ -209,3 +209,52 @@ class RepositoryIndexer:
             "documents": len(chunks),
             "collection": self.repo_name,
         }
+
+
+class RAGRetriever:
+    @staticmethod
+    def collection_exists(repo_name: str) -> bool:
+        try:
+            client = RepositoryIndexer.get_chromadb_client()
+            client.get_collection(repo_name)
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def retrieve(
+        repo_name: str, query: str, top_k: int = 5
+    ) -> List[Dict[str, Any]]:
+        client = RepositoryIndexer.get_chromadb_client()
+        collection = client.get_collection(repo_name)
+
+        response = ollama.embeddings(model=EMBEDDING_MODEL, prompt=query)
+        query_embedding = response["embedding"]
+
+        results = collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+        )
+
+        retrieved = []
+        if not results["ids"] or not results["ids"][0]:
+            return retrieved
+
+        for i in range(len(results["ids"][0])):
+            distance = results["distances"][0][i] if results.get("distances") else 0.0
+            relevance_score = max(
+                0.0, min(1.0, 1.0 - (distance / 2.0))
+            )
+            metadata = results["metadatas"][0][i] if results.get("metadatas") else {}
+
+            retrieved.append({
+                "content": results["documents"][0][i],
+                "file_path": metadata.get("file_path", ""),
+                "category": metadata.get("category", "code"),
+                "chunk_id": results["ids"][0][i],
+                "chunk_number": int(metadata.get("chunk_number", 0)),
+                "relevance_score": round(relevance_score, 4),
+            })
+
+        retrieved.sort(key=lambda x: x["relevance_score"], reverse=True)
+        return retrieved
