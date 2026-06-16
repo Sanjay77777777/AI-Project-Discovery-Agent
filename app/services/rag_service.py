@@ -107,8 +107,9 @@ class DocumentProcessor:
 
     def process_repository(self) -> List[Dict]:
         if not self.repo_path.exists():
+            logger.warning("Repository path not found: %s", self.repo_path)
             raise FileNotFoundError(
-                f"Repository '{self.repo_name}' not found at {self.repo_path}"
+                f"Repository '{self.repo_name}' not found"
             )
 
         chunks = []
@@ -192,8 +193,9 @@ class RepositoryIndexer:
     def index_repository(self) -> Dict:
         repo_path = REPOSITORIES_DIR / self.repo_name
         if not repo_path.exists():
+            logger.warning("Repository path not found: %s", repo_path)
             raise FileNotFoundError(
-                f"Repository '{self.repo_name}' not found at {repo_path}"
+                f"Repository '{self.repo_name}' not found"
             )
 
         logger.info("Indexing repository '%s' started", self.repo_name)

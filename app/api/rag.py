@@ -45,7 +45,7 @@ async def index_repository(request: IndexRequest):
         logger.error("Indexing repository '%s' failed: %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to index repository: {e}",
+            detail="Failed to index repository",
         )
 
 
@@ -70,7 +70,7 @@ async def ask_repository(request: QueryRequest):
         logger.error("Retrieval failed for '%s': %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to query repository: {e}",
+            detail="Failed to query repository",
         )
 
     retrieval_results = [
@@ -103,7 +103,7 @@ async def list_collections():
         logger.error("Failed to list collections: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list collections: {e}",
+            detail="Failed to list collections",
         )
 
     collection_info = []
@@ -151,13 +151,13 @@ async def repository_qa(request: QARequest):
         logger.error("QA runtime error for '%s': %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail="QA generation failed",
         )
     except Exception as e:
         logger.error("QA failed for '%s': %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"QA generation failed: {e}",
+            detail="QA generation failed",
         )
 
     sources = [
@@ -218,13 +218,13 @@ async def repository_summary(request: RepositorySummaryRequest):
         logger.error("Summary runtime error for '%s': %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail="Repository summary failed",
         )
     except Exception as e:
         logger.error("Summary failed for '%s': %s", request.repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Repository summary failed: {e}",
+            detail="Repository summary failed",
         )
 
     return RepositorySummaryResponse(
@@ -264,5 +264,5 @@ async def delete_collection(repo_name: str):
         logger.error("Failed to delete collection for '%s': %s", repo_name, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete collection: {e}",
+            detail="Failed to delete collection",
         )
