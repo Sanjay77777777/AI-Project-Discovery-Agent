@@ -45,6 +45,9 @@ All processing runs locally using Ollama and ChromaDB — no external API calls,
 - LLM error handling with 503 status codes
 - Configurable timeout protection
 - Structured logging
+- Clone URL validation (only `http`/`https` allowed — `file://`, `ssh://`, `git://` blocked)
+- Shallow clone with configurable timeout and disk space check
+- Sanitized error responses (no stack traces or filesystem paths leaked)
 
 ---
 
@@ -130,12 +133,27 @@ Answer + Sources       Summary + Architecture + Tech Stack
 
 ---
 
+## System Requirements
+
+| Requirement | Minimum | Recommended |
+|---|---|---|
+| **RAM** | 8 GB | 16 GB |
+| **Disk Space** | 5 GB | 10 GB+ |
+| **CPU** | x86_64, 4 cores | x86_64, 8 cores |
+| **OS** | Windows 10+, Linux, macOS 12+ | — |
+| **Python** | 3.12 | 3.12 |
+| **Ollama** | Installed and running | Latest version |
+
+*Disk usage scales with the number and size of repositories indexed. Each repository typically requires 50–500 MB for ChromaDB storage plus the cloned source files.*
+
+---
+
 ## Installation
 
 ### Prerequisites
 
 - Python 3.12+
-- [Ollama](https://ollama.ai)
+- [Ollama](https://ollama.ai) (must be installed and running)
 
 ### Setup
 

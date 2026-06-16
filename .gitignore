@@ -1,7 +1,7 @@
 venv/
 repositories/
 vectordb/
-**pycache**/
+__pycache__/
 *.pyc
 .env
 logs/
